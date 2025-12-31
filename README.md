@@ -152,6 +152,35 @@ ReAct's explicit reasoning loop produces more accurate answers by using tools fo
 
 ---
 
+### 5. Synthetic Data Generation (`synthetic_data_gen.ipynb`)
+
+Teaches structured approaches to generating diverse, realistic synthetic data for evaluation.
+
+| | |
+|---|---|
+| **Use Case** | Product search queries for e-commerce |
+| **Model** | Llama 3.1 8B (GROQ) |
+| **Output** | Diverse query dataset with metadata |
+
+#### The Problem
+
+Asking LLMs for queries without structure → repetitive, generic outputs.
+
+#### The Solution: Dimension-Based Generation
+
+| Step | Description |
+|------|-------------|
+| **1. Define Dimensions** | Category, Price Intent, Specificity, User Context, Urgency |
+| **2. Identify Failures** | Misspellings, abbreviations, negations, implicit constraints |
+| **3. Manual Tuples** | ~20 hand-crafted (category, price, specificity, ...) combinations |
+| **4. Scale with LLM** | Generate more tuples + convert to natural language separately |
+
+#### Key Insight
+
+**Separate tuple generation from query phrasing** to avoid repetitive patterns. The structured approach guarantees coverage and makes the dataset traceable.
+
+---
+
 ## Upcoming Notebooks
 
 | Notebook | Focus Area | Status |
@@ -182,10 +211,11 @@ matplotlib
 ```
 evals/
 ├── README.md
-├── prompt_evals_v2.ipynb    # Prompt evaluation
-├── tool_eval_v2.ipynb       # Tool calling evaluation
-├── rag_evals.ipynb          # RAG evaluation
-├── planning_evals.ipynb     # Planning evaluation
+├── prompt_evals_v2.ipynb      # Prompt evaluation
+├── tool_eval_v2.ipynb         # Tool calling evaluation
+├── rag_evals.ipynb            # RAG evaluation
+├── planning_evals.ipynb       # Planning/ReAct evaluation
+├── synthetic_data_gen.ipynb   # Synthetic data generation
 └── (future notebooks)
 ```
 
