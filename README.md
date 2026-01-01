@@ -181,11 +181,79 @@ Asking LLMs for queries without structure → repetitive, generic outputs.
 
 ---
 
-## Upcoming Notebooks
+### 6. Memory Evaluation (`memory_evals.ipynb`)
 
-| Notebook | Focus Area | Status |
-|----------|------------|--------|
-| Memory Evaluation | Conversation memory, context retention | Planned |
+Evaluates agent memory - the ability to store, recall, update, and forget information across conversation turns.
+
+| | |
+|---|---|
+| **Agent Type** | Memory-augmented conversational agent |
+| **Model** | Llama 3.1 8B (GROQ) |
+| **Memory** | Explicit key-value store with logging |
+
+#### Metrics
+
+| Metric | Abbreviation | Description |
+|--------|--------------|-------------|
+| **Memory Recall Accuracy** | MRA | Can the agent recall stored facts? |
+| **Temporal Consistency Score** | TCS | Are answers consistent over multiple turns? |
+| **Memory Update Correctness** | MUC | Does memory update when facts change? |
+| **Forgetting Appropriateness** | FAS | Does agent forget when asked? |
+| **Memory Pollution Rate** | MPR | Does agent store hallucinated facts? |
+| **Cross-Episode Transfer** | CETS | Do facts persist across sessions? |
+
+#### Key Difference from RAG
+
+| Aspect | RAG | Memory |
+|--------|-----|--------|
+| Data Source | Static corpus | Dynamic, user-provided |
+| Updates | Index rebuild | Real-time |
+| Forgetting | N/A | Critical capability |
+
+#### Key Insight
+
+Memory evaluation tests **dynamic information management** - storing, recalling, updating, and forgetting personal facts during conversations. This is distinct from RAG's static retrieval.
+
+---
+
+### 7. Error Analysis (`error_analysis.ipynb`)
+
+Demonstrates systematic error analysis and evidence-based prompt improvement.
+
+| | |
+|---|---|
+| **Use Case** | Product description generation for e-commerce |
+| **Generation Model** | Llama 3.1 8B (GROQ) |
+| **Evaluation Model** | Llama 3.3 70B (GROQ) |
+| **Test Data** | 10 products (initial) + 20 products (validation) |
+
+#### The Process
+
+| Step | Description |
+|------|-------------|
+| **1. Define Criteria** | What makes a "good" product description? |
+| **2. Build Baseline** | Simple V1 agent with minimal prompt |
+| **3. Collect Feedback** | Expert critiques on agent outputs |
+| **4. Extract Patterns** | LLM identifies recurring failure modes |
+| **5. Create Taxonomy** | 5-7 named failure categories |
+| **6. Tag & Analyze** | Measure failure frequency on new data |
+| **7. Improve Prompt** | Target top failure modes in V2 |
+
+#### Failure Mode Taxonomy
+
+| Code | Description |
+|------|-------------|
+| `HALLUCINATION` | Made-up specs, features, or claims not in title |
+| `OVERLY_PROMOTIONAL` | Excessive marketing language, superlatives |
+| `VAGUE_GENERIC` | Generic filler that could apply to any product |
+| `MISSING_KEY_INFO` | Fails to mention important details from title |
+| `WRONG_CATEGORY` | Misunderstands the product type or use case |
+| `FORMATTING_ISSUES` | Poor structure, awkward sentences |
+| `FACTUAL_ERROR` | Incorrect claims that contradict the title |
+
+#### Key Insight
+
+**Evidence-based prompt improvement** targets observed issues rather than intuition. By measuring failure frequency, you can prioritize fixes that have the highest impact.
 
 ---
 
@@ -216,6 +284,8 @@ evals/
 ├── rag_evals.ipynb            # RAG evaluation
 ├── planning_evals.ipynb       # Planning/ReAct evaluation
 ├── synthetic_data_gen.ipynb   # Synthetic data generation
+├── memory_evals.ipynb         # Memory evaluation
+├── error_analysis.ipynb       # Error analysis & prompt improvement
 └── (future notebooks)
 ```
 
