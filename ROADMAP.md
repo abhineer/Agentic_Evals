@@ -6,6 +6,7 @@
 - RAG evaluation
 - Tool evaluation
 - Planning evaluation
+- Memory evaluation
 - Synthetic evaluation data
 - Error analysis
 
@@ -19,7 +20,7 @@
 
 ## Q4 2026
 
-- Memory Benchmark
+- Memory Benchmark (dedicated, reproducible benchmark building on the current memory evaluation notebook)
 - Safety Evaluation
 - Production Trace Evaluation
 - Cost and Latency Evaluation

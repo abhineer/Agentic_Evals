@@ -41,6 +41,7 @@ Currently, the repository includes hands-on evaluation notebooks for:
 | Tool Calling | [`tool_eval_v2.ipynb`](notebooks/tools/tool_eval_v2.ipynb) | Tool selection precision/recall, tool success rate, and cost per successful task |
 | RAG | [`rag_evals_v1.ipynb`](notebooks/rag/rag_evals_v1.ipynb) | Context relevance, answer groundedness, and answer correctness across retrieval configs |
 | Planning & Reasoning | [`planning_evals.ipynb`](notebooks/planning/planning_evals.ipynb) | Direct vs. ReAct reasoning: correctness, reasoning quality, and tool-use appropriateness |
+| Memory | [`memory_evals.ipynb`](notebooks/memory/memory_evals.ipynb) | Memory recall accuracy, update correctness, and forgetting appropriateness across multi-turn conversations |
 | Synthetic Data Generation | [`synthetic_data_gen.ipynb`](notebooks/synthetic_data/synthetic_data_gen.ipynb) | Dimension-based generation of diverse, non-repetitive evaluation datasets |
 | Error Analysis | [`error_analysis_v1.ipynb`](notebooks/error_analysis/error_analysis_v1.ipynb) | Systematic failure taxonomy and evidence-based prompt improvement |
 
@@ -99,7 +100,7 @@ A dedicated, reproducible **[Tool Use Benchmark](benchmarks/tool_use/README.md)*
 
 ## Roadmap
 
-**Current:** prompt, RAG, tool, and planning evaluation; synthetic evaluation data generation; error analysis.
+**Current:** prompt, RAG, tool, planning, and memory evaluation; synthetic evaluation data generation; error analysis.
 
 **Coming next:** a Tool Calling Benchmark, agent trajectory evaluation, and a failure taxonomy for agents.
 
