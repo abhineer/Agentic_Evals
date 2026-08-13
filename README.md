@@ -140,7 +140,7 @@ A dedicated, reproducible **Tool Use Benchmark** is in progress (see [Roadmap](#
 
 **Coming next:** a Tool Calling Benchmark, agent trajectory evaluation, and a failure taxonomy for agents.
 
-A full `ROADMAP.md` is coming soon.
+See [`ROADMAP.md`](ROADMAP.md) for the full plan.
 
 ## Contributing
 
