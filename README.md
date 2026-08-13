@@ -92,6 +92,8 @@ Start with:
 
 A dedicated, reproducible **[Tool Use Benchmark](benchmarks/tool_use/README.md)** is in progress (see [Roadmap](#roadmap)). The goal is a fixed set of ~100 tasks — covering single-tool, multi-tool, no-tool, wrong-tool, and failure-recovery scenarios — that any agent can be run against and compared.
 
+For the papers and writing behind the approach here, see [`docs/resources.md`](docs/resources.md).
+
 ## Who Is This For?
 
 - ML/AI engineers building agents who need to know if they're production-ready
