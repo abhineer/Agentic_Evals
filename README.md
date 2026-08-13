@@ -37,12 +37,12 @@ Currently, the repository includes hands-on evaluation notebooks for:
 
 | Area | Notebook | What it evaluates |
 |---|---|---|
-| Prompt Evaluation | [`prompt_evals_v2.ipynb`](prompt_evals_v2.ipynb) | How different system prompts affect response accuracy, clarity, and completeness |
-| Tool Calling | [`tool_eval_v2.ipynb`](tool_eval_v2.ipynb) | Tool selection precision/recall, tool success rate, and cost per successful task |
-| RAG | [`rag_evals_v1.ipynb`](rag_evals_v1.ipynb) | Context relevance, answer groundedness, and answer correctness across retrieval configs |
-| Planning & Reasoning | [`planning_evals.ipynb`](planning_evals.ipynb) | Direct vs. ReAct reasoning: correctness, reasoning quality, and tool-use appropriateness |
-| Synthetic Data Generation | [`synthetic_data_gen.ipynb`](synthetic_data_gen.ipynb) | Dimension-based generation of diverse, non-repetitive evaluation datasets |
-| Error Analysis | [`error_analysis_v1.ipynb`](error_analysis_v1.ipynb) | Systematic failure taxonomy and evidence-based prompt improvement |
+| Prompt Evaluation | [`prompt_evals_v2.ipynb`](notebooks/prompt/prompt_evals_v2.ipynb) | How different system prompts affect response accuracy, clarity, and completeness |
+| Tool Calling | [`tool_eval_v2.ipynb`](notebooks/tools/tool_eval_v2.ipynb) | Tool selection precision/recall, tool success rate, and cost per successful task |
+| RAG | [`rag_evals_v1.ipynb`](notebooks/rag/rag_evals_v1.ipynb) | Context relevance, answer groundedness, and answer correctness across retrieval configs |
+| Planning & Reasoning | [`planning_evals.ipynb`](notebooks/planning/planning_evals.ipynb) | Direct vs. ReAct reasoning: correctness, reasoning quality, and tool-use appropriateness |
+| Synthetic Data Generation | [`synthetic_data_gen.ipynb`](notebooks/synthetic_data/synthetic_data_gen.ipynb) | Dimension-based generation of diverse, non-repetitive evaluation datasets |
+| Error Analysis | [`error_analysis_v1.ipynb`](notebooks/error_analysis/error_analysis_v1.ipynb) | Systematic failure taxonomy and evidence-based prompt improvement |
 
 Each notebook is self-contained, Google Colab-ready, and includes the metrics, dataset, and methodology used.
 
@@ -67,7 +67,7 @@ cd Agentic_Evals
 
 Each notebook is designed to run in Google Colab with no local setup:
 
-1. Open any notebook (e.g. `tool_eval_v2.ipynb`) in Google Colab
+1. Open any notebook (e.g. `notebooks/tools/tool_eval_v2.ipynb`) in Google Colab
 2. Run the setup cell to install dependencies
 3. Enter your [GROQ API key](https://console.groq.com) when prompted
 4. Run all cells to see the evaluation results
@@ -84,8 +84,8 @@ Requirements: Python 3.8+ and a GROQ API key.
 
 Start with:
 
-- [`tool_eval_v2.ipynb`](tool_eval_v2.ipynb) — the most complete example, covering tool selection precision/recall, success rate, and cost-per-task on 6 tools across single-tool, multi-tool, ambiguous, and no-tool scenarios.
-- [`error_analysis_v1.ipynb`](error_analysis_v1.ipynb) — shows the full loop from baseline agent → collected failures → failure taxonomy → targeted prompt fix → re-evaluation.
+- [`tool_eval_v2.ipynb`](notebooks/tools/tool_eval_v2.ipynb) — the most complete example, covering tool selection precision/recall, success rate, and cost-per-task on 6 tools across single-tool, multi-tool, ambiguous, and no-tool scenarios.
+- [`error_analysis_v1.ipynb`](notebooks/error_analysis/error_analysis_v1.ipynb) — shows the full loop from baseline agent → collected failures → failure taxonomy → targeted prompt fix → re-evaluation.
 
 ## Benchmarks
 
