@@ -89,7 +89,7 @@ Start with:
 
 ## Benchmarks
 
-A dedicated, reproducible **Tool Use Benchmark** is in progress (see [Roadmap](#roadmap)). The goal is a fixed set of tasks — covering single-tool, multi-tool, no-tool, wrong-tool, and failure-recovery scenarios — that any agent can be run against and compared.
+A dedicated, reproducible **[Tool Use Benchmark](benchmarks/tool_use/README.md)** is in progress (see [Roadmap](#roadmap)). The goal is a fixed set of ~100 tasks — covering single-tool, multi-tool, no-tool, wrong-tool, and failure-recovery scenarios — that any agent can be run against and compared.
 
 ## Who Is This For?
 
