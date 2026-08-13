@@ -50,50 +50,13 @@ Each notebook is self-contained, Google Colab-ready, and includes the metrics, d
 
 The core philosophy: evaluation isn't a single score, it's a loop that feeds back into the agent.
 
-```text
-                 BUILD
-                   ↓
-                 TEST
-                   ↓
-               EVALUATE
-                   ↓
-             ERROR ANALYSIS
-                   ↓
-                  FIX
-                   ↓
-             RE-EVALUATE
-                   ↓
-               PRODUCTION
-                   ↓
-           PRODUCTION TRACES
-                   │
-                   └──────────────→ EVALUATE
-```
+<img src="docs/images/agent-evaluation-loop.png" alt="Agent Evaluation Loop: build, test, evaluate, error analysis, fix, re-evaluate, production, production traces feeding back into evaluate" width="420">
 
 > Agent evaluation should not end with a score. Evaluation should help identify failure modes, improve the agent, and continuously feed production failures back into the evaluation dataset.
 
 Within a single evaluation run, an agent's behavior is broken down into evaluable stages:
 
-```text
-User Task
-    ↓
-Agent
-    ↓
-┌───────────────────────────┐
-│ Retrieval                 │
-│ Tool Selection             │
-│ Tool Arguments             │
-│ Planning                   │
-│ Memory                     │
-│ Final Answer                │
-└───────────────────────────┘
-    ↓
-Evaluation
-    ↓
-Error Analysis
-    ↓
-Improvement
-```
+<img src="docs/images/evaluation-stages.png" alt="Evaluation stages: user task and agent flow into retrieval, tool selection, tool arguments, planning, memory, and final answer, then evaluation, error analysis, and improvement" width="420">
 
 ## Quick Start
 
