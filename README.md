@@ -1,295 +1,150 @@
-# AI Agent Evaluation Notebooks
+# Agentic Evals
 
-A collection of Jupyter notebooks for evaluating different aspects of AI agents. Each notebook is **Google Colab ready** and designed for educational purposes.
+Practical evaluation techniques, benchmarks, and examples for production AI agents.
+
+Evaluate:
+
+- RAG
+- Tool Calling
+- Planning
+- Memory
+- Safety
+- Reliability
+- Cost
+- Latency
+
+Building an AI agent is relatively easy. Knowing whether it is reliable enough for production is much harder.
+
+This repository focuses on evaluating not just an agent's final answers, but — over time — the behavior and trajectory an agent takes to get there: what it retrieves, which tools it calls, how it plans, and what it remembers.
+
+---
+
+## Why Agent Evaluation?
+
+Most teams can get a demo agent working in an afternoon. Very few can confidently answer:
+
+- Does it pick the right tool, with the right arguments, every time?
+- Does it retrieve the right context, and does it actually use it correctly?
+- Does it recover when a tool call fails, or does it silently give up (or hallucinate)?
+- Is it consistent, or does behavior drift across runs?
+- What does it cost, and how fast is it, at the reliability bar you need?
+
+Agentic Evals exists to make these questions answerable with concrete, reproducible experiments instead of vibes.
+
+## What This Repository Covers
+
+Currently, the repository includes hands-on evaluation notebooks for:
+
+| Area | Notebook | What it evaluates |
+|---|---|---|
+| Prompt Evaluation | [`prompt_evals_v2.ipynb`](prompt_evals_v2.ipynb) | How different system prompts affect response accuracy, clarity, and completeness |
+| Tool Calling | [`tool_eval_v2.ipynb`](tool_eval_v2.ipynb) | Tool selection precision/recall, tool success rate, and cost per successful task |
+| RAG | [`rag_evals_v1.ipynb`](rag_evals_v1.ipynb) | Context relevance, answer groundedness, and answer correctness across retrieval configs |
+| Planning & Reasoning | [`planning_evals.ipynb`](planning_evals.ipynb) | Direct vs. ReAct reasoning: correctness, reasoning quality, and tool-use appropriateness |
+| Synthetic Data Generation | [`synthetic_data_gen.ipynb`](synthetic_data_gen.ipynb) | Dimension-based generation of diverse, non-repetitive evaluation datasets |
+| Error Analysis | [`error_analysis_v1.ipynb`](error_analysis_v1.ipynb) | Systematic failure taxonomy and evidence-based prompt improvement |
+
+Each notebook is self-contained, Google Colab-ready, and includes the metrics, dataset, and methodology used.
+
+## Evaluation Architecture
+
+The core philosophy: evaluation isn't a single score, it's a loop that feeds back into the agent.
+
+```text
+                 BUILD
+                   ↓
+                 TEST
+                   ↓
+               EVALUATE
+                   ↓
+             ERROR ANALYSIS
+                   ↓
+                  FIX
+                   ↓
+             RE-EVALUATE
+                   ↓
+               PRODUCTION
+                   ↓
+           PRODUCTION TRACES
+                   │
+                   └──────────────→ EVALUATE
+```
+
+> Agent evaluation should not end with a score. Evaluation should help identify failure modes, improve the agent, and continuously feed production failures back into the evaluation dataset.
+
+Within a single evaluation run, an agent's behavior is broken down into evaluable stages:
+
+```text
+User Task
+    ↓
+Agent
+    ↓
+┌───────────────────────────┐
+│ Retrieval                 │
+│ Tool Selection             │
+│ Tool Arguments             │
+│ Planning                   │
+│ Memory                     │
+│ Final Answer                │
+└───────────────────────────┘
+    ↓
+Evaluation
+    ↓
+Error Analysis
+    ↓
+Improvement
+```
 
 ## Quick Start
 
-1. Open any notebook in Google Colab
+```bash
+git clone https://github.com/abhineer/Agentic_Evals.git
+cd Agentic_Evals
+```
+
+Each notebook is designed to run in Google Colab with no local setup:
+
+1. Open any notebook (e.g. `tool_eval_v2.ipynb`) in Google Colab
 2. Run the setup cell to install dependencies
-3. Enter your GROQ API key when prompted
+3. Enter your [GROQ API key](https://console.groq.com) when prompted
 4. Run all cells to see the evaluation results
 
----
+To run locally, install the dependencies used across the notebooks:
 
-## Notebooks
-
-### 1. Prompt Evaluation (`prompt_evals_v2.ipynb`)
-
-Evaluates how different system prompts affect agent response quality.
-
-| | |
-|---|---|
-| **Agent** | Physics Teacher |
-| **Model** | Llama 3.1 8B (GROQ) |
-| **Dataset** | 9 challenging physics questions targeting common misconceptions |
-
-#### Metrics
-
-| Metric | Type | Description |
-|--------|------|-------------|
-| **Accuracy** | Binary (0/1) | Is the answer factually correct with no errors? |
-| **Clarity** | Binary (0/1) | Would a confused student understand without follow-up? |
-| **Completeness** | Binary (0/1) | Does it address the nuance/trap in the question? |
-
-#### Prompt Versions Tested
-
-- **Version 1**: Minimal prompt ("Answer the question")
-- **Version 2**: Structured prompt with explicit instructions to address misconceptions
-
-#### Key Insight
-
-Structured prompts that explicitly instruct the model to address misconceptions and edge cases score higher on completeness.
-
----
-
-### 2. Tool Calling Evaluation (`tool_eval_v2.ipynb`)
-
-Evaluates precision and efficiency of tool selection by an LLM agent.
-
-| | |
-|---|---|
-| **Agent** | Tool-calling assistant |
-| **Model** | Llama 3.1 70B (GROQ) |
-| **Framework** | LangChain |
-| **Tools** | 6 (calculator, square_root, temperature_converter, string_reverser, word_counter, date_info) |
-
-#### Metrics
-
-| Metric | Formula | Description |
-|--------|---------|-------------|
-| **Tool Invocation Precision** | correct_calls / total_calls | Were the right tools called? |
-| **Tool Invocation Recall** | recalled / expected | Were all needed tools called? |
-| **Avg Tool Calls per Task** | total_calls / num_tasks | Efficiency of tool usage |
-| **Tool Success Rate** | successful / total_calls | Did tools execute without errors? |
-| **Tool-Attributable Success** | attributable / tool_required | Did tools contribute to the answer? |
-| **Cost per Successful Task** | total_cost / successful_tasks | Cost efficiency |
-
-#### Test Scenarios
-
-| Category | Description |
-|----------|-------------|
-| `single_tool` | Tasks requiring exactly one tool |
-| `multi_tool` | Tasks requiring multiple tools |
-| `ambiguous` | Tasks where multiple tools could work |
-| `no_tool` | Tasks that don't need any tools |
-
----
-
-### 3. RAG Evaluation (`rag_evals.ipynb`)
-
-Evaluates Retrieval-Augmented Generation systems for a Physics Tutor agent.
-
-| | |
-|---|---|
-| **Agent** | Physics Tutor (RAG) |
-| **Model** | Llama 3.1 8B (GROQ) |
-| **Corpus** | 12 physics concept documents |
-| **Dataset** | 10 physics questions with reference answers |
-
-#### Metrics
-
-| Metric | Type | Description |
-|--------|------|-------------|
-| **Context Relevance** | Binary (0/1) | Does retrieved context contain relevant information? |
-| **Answer Groundedness** | Binary (0/1) | Is the answer supported by the context (not hallucinated)? |
-| **Answer Correctness** | Binary (0/1) | Is the answer factually correct? |
-
-#### RAG Configurations Tested
-
-| Config | k (docs) | Prompt Style |
-|--------|----------|--------------|
-| Config A | 1 | Minimal |
-| Config B | 2 | Structured |
-| Config C | 3 | Detailed |
-
-#### Key Insight
-
-RAG evaluation requires measuring both retrieval AND generation quality. A system can retrieve well but hallucinate, or generate well from irrelevant context.
-
----
-
-### 4. Planning & Reasoning Evaluation (`planning_evals.ipynb`)
-
-Compares agent reasoning approaches: **Direct** vs **ReAct** (Reasoning + Acting).
-
-| | |
-|---|---|
-| **Task Type** | Multi-step reasoning tasks requiring facts and calculations |
-| **Generation Model** | Llama 3.1 8B (GROQ) |
-| **Evaluation Model** | Llama 3.3 70B (GROQ) |
-| **Tools** | Calculator, Search (simulated knowledge base) |
-| **Dataset** | 8 tasks requiring tool use and multi-step reasoning |
-
-#### Metrics
-
-| Metric | Type | Description |
-|--------|------|-------------|
-| **Answer Correctness** | Binary (0/1) | Is the final answer factually correct? |
-| **Reasoning Quality** | Binary (0/1) | Did the agent show clear, logical reasoning steps? |
-| **Tool Use Appropriateness** | Binary (0/1) | Did the agent use tools when needed? |
-
-#### Approaches Tested
-
-| Approach | Description |
-|----------|-------------|
-| **Direct** | Answer immediately without explicit reasoning |
-| **ReAct** | Thought → Action → Observation loop with tool use |
-
-#### ReAct Example
-```
-Thought: I need to find the distance to the Moon
-Action: search: moon distance
-Observation: The Moon is approximately 384,400 km from Earth
-Thought: Now I calculate time = distance / speed of light
-Action: calculator: 384400 / 300000
-Observation: Result: 1.28
-Final Answer: Light takes about 1.28 seconds to reach the Moon
+```bash
+pip install groq langchain langchain-groq pandas matplotlib
 ```
 
-#### Key Insight
+Requirements: Python 3.8+ and a GROQ API key.
 
-ReAct's explicit reasoning loop produces more accurate answers by using tools for facts/calculations rather than relying on parametric memory. The trace is also auditable and debuggable.
+## Examples
 
----
+Start with:
 
-### 5. Synthetic Data Generation (`synthetic_data_gen.ipynb`)
+- [`tool_eval_v2.ipynb`](tool_eval_v2.ipynb) — the most complete example, covering tool selection precision/recall, success rate, and cost-per-task on 6 tools across single-tool, multi-tool, ambiguous, and no-tool scenarios.
+- [`error_analysis_v1.ipynb`](error_analysis_v1.ipynb) — shows the full loop from baseline agent → collected failures → failure taxonomy → targeted prompt fix → re-evaluation.
 
-Teaches structured approaches to generating diverse, realistic synthetic data for evaluation.
+## Benchmarks
 
-| | |
-|---|---|
-| **Use Case** | Product search queries for e-commerce |
-| **Model** | Llama 3.1 8B (GROQ) |
-| **Output** | Diverse query dataset with metadata |
+A dedicated, reproducible **Tool Use Benchmark** is in progress (see [Roadmap](#roadmap)). The goal is a fixed set of tasks — covering single-tool, multi-tool, no-tool, wrong-tool, and failure-recovery scenarios — that any agent can be run against and compared.
 
-#### The Problem
+## Who Is This For?
 
-Asking LLMs for queries without structure → repetitive, generic outputs.
+- ML/AI engineers building agents who need to know if they're production-ready
+- Teams evaluating tool use, RAG, planning, or memory in their own agents
+- Practitioners who want reproducible evaluation methodology, not just a leaderboard
 
-#### The Solution: Dimension-Based Generation
+## Roadmap
 
-| Step | Description |
-|------|-------------|
-| **1. Define Dimensions** | Category, Price Intent, Specificity, User Context, Urgency |
-| **2. Identify Failures** | Misspellings, abbreviations, negations, implicit constraints |
-| **3. Manual Tuples** | ~20 hand-crafted (category, price, specificity, ...) combinations |
-| **4. Scale with LLM** | Generate more tuples + convert to natural language separately |
+**Current:** prompt, RAG, tool, and planning evaluation; synthetic evaluation data generation; error analysis.
 
-#### Key Insight
+**Coming next:** a Tool Calling Benchmark, agent trajectory evaluation, and a failure taxonomy for agents.
 
-**Separate tuple generation from query phrasing** to avoid repetitive patterns. The structured approach guarantees coverage and makes the dataset traceable.
+A full `ROADMAP.md` is coming soon.
 
----
+## Contributing
 
-### 6. Memory Evaluation (`memory_evals.ipynb`)
-
-Evaluates agent memory - the ability to store, recall, update, and forget information across conversation turns.
-
-| | |
-|---|---|
-| **Agent Type** | Memory-augmented conversational agent |
-| **Model** | Llama 3.1 8B (GROQ) |
-| **Memory** | Explicit key-value store with logging |
-
-#### Metrics
-
-| Metric | Abbreviation | Description |
-|--------|--------------|-------------|
-| **Memory Recall Accuracy** | MRA | Can the agent recall stored facts? |
-| **Temporal Consistency Score** | TCS | Are answers consistent over multiple turns? |
-| **Memory Update Correctness** | MUC | Does memory update when facts change? |
-| **Forgetting Appropriateness** | FAS | Does agent forget when asked? |
-| **Memory Pollution Rate** | MPR | Does agent store hallucinated facts? |
-| **Cross-Episode Transfer** | CETS | Do facts persist across sessions? |
-
-#### Key Difference from RAG
-
-| Aspect | RAG | Memory |
-|--------|-----|--------|
-| Data Source | Static corpus | Dynamic, user-provided |
-| Updates | Index rebuild | Real-time |
-| Forgetting | N/A | Critical capability |
-
-#### Key Insight
-
-Memory evaluation tests **dynamic information management** - storing, recalling, updating, and forgetting personal facts during conversations. This is distinct from RAG's static retrieval.
-
----
-
-### 7. Error Analysis (`error_analysis.ipynb`)
-
-Demonstrates systematic error analysis and evidence-based prompt improvement.
-
-| | |
-|---|---|
-| **Use Case** | Product description generation for e-commerce |
-| **Generation Model** | Llama 3.1 8B (GROQ) |
-| **Evaluation Model** | Llama 3.3 70B (GROQ) |
-| **Test Data** | 10 products (initial) + 20 products (validation) |
-
-#### The Process
-
-| Step | Description |
-|------|-------------|
-| **1. Define Criteria** | What makes a "good" product description? |
-| **2. Build Baseline** | Simple V1 agent with minimal prompt |
-| **3. Collect Feedback** | Expert critiques on agent outputs |
-| **4. Extract Patterns** | LLM identifies recurring failure modes |
-| **5. Create Taxonomy** | 5-7 named failure categories |
-| **6. Tag & Analyze** | Measure failure frequency on new data |
-| **7. Improve Prompt** | Target top failure modes in V2 |
-
-#### Failure Mode Taxonomy
-
-| Code | Description |
-|------|-------------|
-| `HALLUCINATION` | Made-up specs, features, or claims not in title |
-| `OVERLY_PROMOTIONAL` | Excessive marketing language, superlatives |
-| `VAGUE_GENERIC` | Generic filler that could apply to any product |
-| `MISSING_KEY_INFO` | Fails to mention important details from title |
-| `WRONG_CATEGORY` | Misunderstands the product type or use case |
-| `FORMATTING_ISSUES` | Poor structure, awkward sentences |
-| `FACTUAL_ERROR` | Incorrect claims that contradict the title |
-
-#### Key Insight
-
-**Evidence-based prompt improvement** targets observed issues rather than intuition. By measuring failure frequency, you can prioritize fixes that have the highest impact.
-
----
-
-## Requirements
-
-- Python 3.8+
-- GROQ API key ([Get one here](https://console.groq.com))
-
-### Dependencies
-
-```
-groq
-langchain
-langchain-groq
-pandas
-matplotlib
-```
-
----
-
-## Project Structure
-
-```
-evals/
-├── README.md
-├── prompt_evals_v2.ipynb      # Prompt evaluation
-├── tool_eval_v2.ipynb         # Tool calling evaluation
-├── rag_evals.ipynb            # RAG evaluation
-├── planning_evals.ipynb       # Planning/ReAct evaluation
-├── synthetic_data_gen.ipynb   # Synthetic data generation
-├── memory_evals.ipynb         # Memory evaluation
-├── error_analysis.ipynb       # Error analysis & prompt improvement
-└── (future notebooks)
-```
-
----
+Contributions are welcome — new evaluation techniques, benchmark tasks, datasets, metrics, error-analysis examples, and real-world agent evaluation write-ups are all useful. A `CONTRIBUTING.md` with guidelines is coming soon.
 
 ## License
 
