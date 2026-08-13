@@ -144,7 +144,7 @@ See [`ROADMAP.md`](ROADMAP.md) for the full plan.
 
 ## Contributing
 
-Contributions are welcome — new evaluation techniques, benchmark tasks, datasets, metrics, error-analysis examples, and real-world agent evaluation write-ups are all useful. A `CONTRIBUTING.md` with guidelines is coming soon.
+Contributions are welcome — new evaluation techniques, benchmark tasks, datasets, metrics, error-analysis examples, and real-world agent evaluation write-ups are all useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
 
 ## License
 
