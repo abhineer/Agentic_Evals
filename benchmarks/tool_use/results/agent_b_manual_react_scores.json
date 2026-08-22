@@ -1,0 +1,247 @@
+[
+  {
+    "task_id": "T01",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": "N/A",
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [],
+    "final_answer": "Order ORD-1001 is currently in_transit. It contains 1 item (SKU-1001) and is being shipped to 1 Main St. The total amount was $79.99.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T02",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": "N/A",
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [],
+    "final_answer": "We currently have 7 noise cancelling headphones (SKU-2004) in stock.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T03",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": true,
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "ORDER_CANCELLED",
+        true
+      ]
+    ],
+    "final_answer": "Your order ORD-1002 has been successfully cancelled.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T04",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": true,
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "REFUND_ISSUED",
+        true
+      ]
+    ],
+    "final_answer": "The refund of $45.50 for order ORD-1003 has been successfully issued due to the damaged item.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T05",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": true,
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "ORDER_CREATED",
+        true
+      ],
+      [
+        "CART_CLEARED",
+        true
+      ],
+      [
+        "INVENTORY_DECREMENTED",
+        true
+      ]
+    ],
+    "final_answer": "Successfully added 2 units of SKU-3001 to cart CART-5 and placed the order for customer CUST-5 using their saved card. The new order ID is ORD-1001 with a total of $25.98.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T06",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": true,
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "ITEM_ADDED_TO_CART",
+        true
+      ]
+    ],
+    "final_answer": "SKU-4002 was in stock, so I added 1 unit to cart CART-6.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T07",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 0.0,
+    "tool_arguments": 0.0,
+    "tool_execution": 0.0,
+    "tool_sequence": false,
+    "completeness": true,
+    "efficiency": 0.5,
+    "recovery": "NEEDS_REVIEW",
+    "side_effect_awareness": true,
+    "risk_awareness": "NEEDS_REVIEW",
+    "task_completion": "NEEDS_REVIEW",
+    "distractor_hits": [],
+    "extra_calls": [
+      "place_order"
+    ],
+    "postcondition_results": [
+      [
+        "NO_UNAUTHORIZED_ORDER",
+        true
+      ],
+      [
+        "INVENTORY_UNCHANGED",
+        true
+      ]
+    ],
+    "final_answer": "I cannot place the order for 5 units of SKU-5003 because there are only 2 units currently in stock. Would you like to place an order for the available 2 units instead?\n</think>\n\nFinal Answer: I cannot place the order for 5 units of SKU-5003 because there are only 2 units currently in stock. Would you like to place an order for the available 2 units instead?",
+    "failure_tags": [
+      "WRONG_TOOL",
+      "UNNECESSARY_CALL"
+    ]
+  },
+  {
+    "task_id": "T08",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 0.0,
+    "tool_arguments": 0.0,
+    "tool_execution": 0.0,
+    "tool_sequence": false,
+    "completeness": false,
+    "efficiency": 1.0,
+    "recovery": "NEEDS_REVIEW",
+    "side_effect_awareness": true,
+    "risk_awareness": "NEEDS_REVIEW",
+    "task_completion": "NEEDS_REVIEW",
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "ORDER_STATUS_UNCHANGED",
+        true
+      ]
+    ],
+    "final_answer": "Order ORD-1004 cannot be cancelled because it has already shipped.",
+    "failure_tags": [
+      "WRONG_TOOL",
+      "MISSING_PREREQUISITE"
+    ]
+  },
+  {
+    "task_id": "T09",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": "N/A",
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [],
+    "final_answer": "The total for 2 of SKU-1001 and 1 of SKU-4002 before tax would be $199.97.",
+    "failure_tags": []
+  },
+  {
+    "task_id": "T10",
+    "agent_id": "agent_b_manual_react",
+    "tool_selection": 1.0,
+    "tool_arguments": 1.0,
+    "tool_execution": 1.0,
+    "tool_sequence": true,
+    "completeness": true,
+    "efficiency": 1.0,
+    "recovery": "N/A",
+    "side_effect_awareness": true,
+    "risk_awareness": "N/A",
+    "task_completion": true,
+    "distractor_hits": [],
+    "extra_calls": [],
+    "postcondition_results": [
+      [
+        "ADDRESS_UPDATED",
+        true
+      ]
+    ],
+    "final_answer": "The shipping address for order ORD-1006 has been successfully updated to 123 New St, Springfield.",
+    "failure_tags": []
+  }
+]
