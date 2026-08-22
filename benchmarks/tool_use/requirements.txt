@@ -1,0 +1,4 @@
+langchain-core>=0.3
+langchain-groq>=0.2
+groq>=0.11
+pydantic>=2
