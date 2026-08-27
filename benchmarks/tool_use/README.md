@@ -7,8 +7,8 @@ right time, with the right consequences. Full design rationale in
 [`Agentic_Evals_Tool_Use_Benchmark_Design.md`](../../Agentic_Evals_Tool_Use_Benchmark_Design.md).
 
 **Status: Phase 1 (Specification) + Phase 2 (10-task pilot) complete. Phase 3
-task set drafted and scorable, not yet merged into the live task set or run
-against real agents — see "Phase 3 Draft" below.**
+task set (40 additional tasks, T11–T50) merged into `tasks.json` — 50 tasks
+total — but not yet run against real agents. See "Phase 3 Tasks" below.**
 Phase 3 (25–50 tasks) and Phase 4 (100+ tasks) are tracked in
 [issue #1](https://github.com/abhineer/Agentic_Evals/issues/1) and scoped for
 subsequent weeks — see "What This Surfaced" below for why 10 tasks came
@@ -29,13 +29,12 @@ set was built to cover.
 | [`SCHEMA.md`](SCHEMA.md) | The finalized tool/task/trace schema and tool-use failure taxonomy (Phase 1) |
 | `store.py` | In-memory retail backend (`RetailStore`) tools operate against |
 | `tools.py` | The 10 pilot tools — full schema representation + real implementation, enforcing preconditions against `RetailStore` |
-| `tasks.json` | The 10 pilot tasks — prompt, seed world state, expected trajectory, stress-test tag |
-| `tasks_phase3_draft.json` | 40 additional draft tasks (T11–T50) toward Phase 3's 25–50 target — scorable, **not yet merged into `tasks.json` / `run_pilot.py`**, see "Phase 3 Draft" below |
+| `tasks.json` | 50 tasks total — the original 10 pilot tasks (T01–T10) plus 40 Phase 3 additions (T11–T50) — prompt, seed world state, expected trajectory, stress-test tag |
 | `harness/runner.py` | Executes an agent adapter against the task set, produces standard traces |
 | `harness/scorer.py` | Scores traces against the mechanically-checkable evaluation dimensions |
 | `harness/agents/langchain_groq_agent.py` | Agent A — LangChain `bind_tools` loop, `openai/gpt-oss-120b` |
 | `harness/agents/manual_react_agent.py` | Agent B — hand-rolled ReAct prompt loop, raw Groq client, `qwen/qwen3.6-27b` |
-| `run_pilot.py` | Runs both agents against all 10 tasks, writes `results/` |
+| `run_pilot.py` | Runs both agents against every task in `tasks.json` (currently 50), writes `results/` — **existing `results/` files are from the original 10-task pilot run only; the 40 Phase 3 additions haven't been run against a real agent yet** |
 | `results/` | Traces, scores, and the by-hand spot-check (`results/spot_check.md`) |
 
 ## Running It
@@ -76,7 +75,7 @@ fail or actually cost something, and `place_order`/`issue_refund` genuinely
 mutate a shared `RetailStore` (inventory decrements, orders get created,
 refunds get recorded against a real order total).
 
-## The 10 Tasks
+## The Pilot's 10 Tasks (T01–T10)
 
 Not an even split of Phase 3's ~12 categories — the design doc is explicit
 that 10 tasks should stress-test the schema, not pre-enumerate every future
@@ -84,7 +83,8 @@ category. Picked instead: 2 baseline correct-selection tasks, 3 wrong-tool
 temptations, 1 argument-correctness stress test, 2 sequential-dependency
 tasks (one unconditional, one conditional on a precondition), 1 tool-failure
 task, and 1 high-risk-action task. Full task definitions with expected
-trajectories in `tasks.json`.
+trajectories in `tasks.json`. (T11–T50, the 40 Phase 3 additions, are
+described in "Phase 3 Tasks" below.)
 
 ## Pilot Results
 
@@ -133,49 +133,24 @@ neither agent proactively checked state before attempting the risky
 operation. See `results/spot_check.md` for the full trace-level read of
 both.
 
-## Phase 3 Draft
+## Phase 3 Tasks (T11–T50)
 
-`tasks_phase3_draft.json` holds 40 new tasks (T11–T50), taking the total
-toward Phase 3's 25–50 target (10 pilot + 40 draft = 50, sized to the top of
-that range). These are content-complete against the real `tools.py`/
-`store.py` — real SKUs, real preconditions, real enum values. Both harness
-gaps that originally blocked them from running through `run_pilot.py` are
-now resolved:
+40 additional tasks, merged into `tasks.json` alongside the original 10
+(T01–T10), taking the live task set to 50 — content-complete against the
+real `tools.py`/`store.py` (real SKUs, real preconditions, real enum
+values) and fully scorable by `harness/scorer.py`. Getting there required
+closing two harness gaps the draft tasks surfaced — a hardcoded
+per-task-ID postcondition checker that silently defaulted unscored tasks to
+"passed," and a strict-order-only trajectory scorer with no way to express
+order-independent or partially-ordered calls — both resolved and validated
+(regression-tested against the pilot's recorded traces, golden-trace
+simulation of all 40, and explicit reordering tests). Full detail in
+`SCHEMA.md` section 9.
 
-1. ~~The postcondition checker isn't generic yet.~~ **Resolved.**
-   `harness/scorer.py`'s `POSTCONDITION_PREDICATES` now reads each task's
-   `expected_postconditions` generically instead of hardcoding one Python
-   function per task ID, and a task with no declared postconditions is
-   checked against a real invariant (`WORLD_STATE_UNCHANGED`) rather than
-   silently defaulting to "passed." Validated two ways: re-scoring the
-   pilot's recorded traces (`results/*_traces.json`) through the new checker
-   reproduces every original score exactly, plus two documented
-   improvements (T01/T02/T09 now get a real check instead of `N/A`; T05's
-   previously-unchecked `ITEM_ADDED_TO_CART` postcondition — silently
-   dropped by the old per-task function — now passes); and simulating a
-   "golden" agent that executes exactly the `expected_trajectory` for all
-   40 draft tasks against the real store scores `task_completion: True` (or
-   `NEEDS_REVIEW` for judge-flagged tasks) on all 40.
-2. ~~The scorer only supports one trajectory shape.~~ **Resolved.**
-   `harness/scorer.py`'s `_align_trajectory` now partitions
-   `expected_trajectory` into ordered blocks from each step's
-   `sequence_group` (`STRICT`'s default is one block per step; `ANY`'s
-   default is one shared block) and matches each block against the
-   corresponding window of the agent's calls under any within-block
-   permutation, deriving tool selection/arguments/sequence from that
-   alignment instead of raw position. Validated by re-scoring the pilot's
-   (all-`STRICT`) recorded traces — identical results — and, for every
-   `ANY`/`PARTIAL` draft task, executing the expected calls in a
-   *different*, still-valid order (e.g. T48's two independent reads
-   reversed, T35/T36's two free-order disambiguating reads swapped while
-   the destructive call stays last) and confirming a perfect score, plus
-   confirming an order that violates a `PARTIAL` task's block constraint
-   (the destructive call moved before its required reads) still fails.
-   Full detail in `SCHEMA.md` section 9.
-
-`tasks_phase3_draft.json` is not yet merged into the live `tasks.json` /
-wired into `run_pilot.py` — that's now a mechanical step rather than a
-blocked one.
+**Not yet run against a real agent.** `run_pilot.py` will now execute and
+score all 50 tasks, but the `results/` directory on disk still only reflects
+the original 10-task pilot run — running it again requires `GROQ_API_KEY`
+and will overwrite/extend those results.
 
 **Category breakdown** (40 new + 10 reused/kept from the pilot = 50 total),
 weighted toward categories the pilot showed actually discriminate agent
@@ -183,7 +158,7 @@ quality (wrong-tool, argument errors, failure recovery) rather than pure
 production-frequency, plus three categories the pilot never touched at all
 (no-tool, ambiguous, parallel):
 
-| Category | Total | From pilot | New (draft) |
+| Category | Total | From pilot | Phase 3 additions |
 |---|---|---|---|
 | single-tool | 3 | 1 | 2 |
 | multi-tool | 5 | 1 | 4 |
