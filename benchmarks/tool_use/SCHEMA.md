@@ -252,12 +252,12 @@ task-type *subsets* actually in use (sections 2–3), the standard trace format
 and the tool-use failure taxonomy (section 6, which the design doc left as a
 placeholder — "failure taxonomy" — under Phase 1's deliverables).
 
-## 9. Phase 3 Draft — Proposed Additions
+## 9. Phase 3 Additions
 
-`tasks_phase3_draft.json`'s 40 draft tasks (T11–T50) surfaced two schema gaps
-the pilot's 10 tasks were too uniform to hit — recorded here so the
-proposal lives with the schema, not just in a task file's comments. Both are
-now implemented.
+Phase 3's 40 additional tasks (T11–T50, merged into `tasks.json` alongside
+the original pilot's T01–T10) surfaced two schema gaps the pilot's 10 tasks
+were too uniform to hit — recorded here so the proposal lives with the
+schema, not just in a task file's comments. Both are now implemented.
 
 **New task types**, beyond the pilot subset in section 3:
 
