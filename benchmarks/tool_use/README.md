@@ -6,7 +6,8 @@ whether they perform the right operation, with the right arguments, at the
 right time, with the right consequences. Full design rationale in
 [`Agentic_Evals_Tool_Use_Benchmark_Design.md`](../../Agentic_Evals_Tool_Use_Benchmark_Design.md).
 
-**Status: Phase 1 (Specification) + Phase 2 (10-task pilot) complete.**
+**Status: Phase 1 (Specification) + Phase 2 (10-task pilot) complete. Phase 3
+task set drafted (not yet runnable — see "Phase 3 Draft" below).**
 Phase 3 (25–50 tasks) and Phase 4 (100+ tasks) are tracked in
 [issue #1](https://github.com/abhineer/Agentic_Evals/issues/1) and scoped for
 subsequent weeks — see "What This Surfaced" below for why 10 tasks came
@@ -28,6 +29,7 @@ set was built to cover.
 | `store.py` | In-memory retail backend (`RetailStore`) tools operate against |
 | `tools.py` | The 10 pilot tools — full schema representation + real implementation, enforcing preconditions against `RetailStore` |
 | `tasks.json` | The 10 pilot tasks — prompt, seed world state, expected trajectory, stress-test tag |
+| `tasks_phase3_draft.json` | 40 additional draft tasks (T11–T50) toward Phase 3's 25–50 target — **not yet wired into `run_pilot.py`**, see "Phase 3 Draft" below |
 | `harness/runner.py` | Executes an agent adapter against the task set, produces standard traces |
 | `harness/scorer.py` | Scores traces against the mechanically-checkable evaluation dimensions |
 | `harness/agents/langchain_groq_agent.py` | Agent A — LangChain `bind_tools` loop, `openai/gpt-oss-120b` |
@@ -129,6 +131,67 @@ substance: correct final answers once the tool rejected the call, but
 neither agent proactively checked state before attempting the risky
 operation. See `results/spot_check.md` for the full trace-level read of
 both.
+
+## Phase 3 Draft
+
+`tasks_phase3_draft.json` holds 40 new tasks (T11–T50), taking the total
+toward Phase 3's 25–50 target (10 pilot + 40 draft = 50, sized to the top of
+that range). These are content-complete against the real `tools.py`/
+`store.py` — real SKUs, real preconditions, real enum values — but **two
+harness gaps have to close before they can run through `run_pilot.py`**:
+
+1. **The postcondition checker isn't generic yet.** `harness/scorer.py`
+   currently hardcodes one Python function per task ID (`_check_T03`
+   through `_check_T10`) rather than reading `expected_postconditions` from
+   the task data. A task with no matching function silently defaults
+   `postconditions_met` to `True` (see `score_task`'s
+   `postcondition_results if ... else True`) — not flagged, just skipped.
+   That's an acceptable shortcut at 10 tasks but silently misleading at 50:
+   without a generic evaluator, every one of the 40 new tasks reports as
+   "passed" on postconditions regardless of what actually happened. This has
+   to become a data-driven registry, not more per-task functions.
+2. **The scorer only supports one trajectory shape.** `tool_sequence`
+   (`harness/scorer.py`) is a strict ordered-prefix match with no concept of
+   order-independence. 15 of the 40 draft tasks need something else: two
+   `add_item_to_cart` calls that can happen in either order before a
+   `place_order` (T19), two disambiguating reads that can happen in either
+   order before a destructive call (T35, T36), or fully independent parallel
+   calls (T13–T16, T44–T50). Each draft task carries a new `trajectory_order`
+   field (`STRICT` / `ANY` / `PARTIAL`) proposing this, but it isn't in
+   `SCHEMA.md` yet and the scorer doesn't read it.
+
+**Category breakdown** (40 new + 10 reused/kept from the pilot = 50 total),
+weighted toward categories the pilot showed actually discriminate agent
+quality (wrong-tool, argument errors, failure recovery) rather than pure
+production-frequency, plus three categories the pilot never touched at all
+(no-tool, ambiguous, parallel):
+
+| Category | Total | From pilot | New (draft) |
+|---|---|---|---|
+| single-tool | 3 | 1 | 2 |
+| multi-tool | 5 | 1 | 4 |
+| dependency | 5 | 1 | 4 |
+| sequential | 5 | 1 | 4 |
+| wrong-tool | 6 | 3 | 3 |
+| argument errors | 5 | 1 | 4 |
+| tool failures | 4 | 1 | 3 |
+| failure recovery | 6 | 1 | 5 |
+| no-tool | 4 | 0 | 4 |
+| ambiguous | 4 | 0 | 4 |
+| parallel | 3 | 0 | 3 |
+| **Total** | **50** | **10** | **40** |
+
+**The pilot's "unguarded risk" gap closed without a new tool.** The pilot
+flagged that all 10 tools self-protect via preconditions, so no task could
+tell "agent checked first" apart from "agent got caught by the tool and
+recovered." T35/T36 close this using the *existing* tool set: two orders (or
+two paid orders) for the same customer that satisfy `cancel_order`'s or
+`issue_refund`'s preconditions equally, where only the agent confirming
+which one matches the customer's description — not any tool-level guard —
+prevents cancelling/refunding the wrong one. A wrong-target outcome is
+mechanically checkable (world state shows the wrong order mutated); the
+residual case (right outcome, no verification, i.e. a lucky guess) is what
+still needs a judge to read from the trace.
 
 ## What This Surfaced
 
