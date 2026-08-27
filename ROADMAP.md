@@ -12,7 +12,7 @@
 
 ## Q3 2026
 
-- Tool Calling Benchmark — spec + pilot complete, scaling to 100 in progress (see [`benchmarks/tool_use/README.md`](benchmarks/tool_use/README.md) and issue #1)
+- Tool Calling Benchmark — spec + pilot complete, Phase 3 task set drafted (50 tasks total, not yet runnable pending scorer generalization), scaling to 100 in progress (see [`benchmarks/tool_use/README.md`](benchmarks/tool_use/README.md) and issue #1)
 - Agent Trajectory Evaluation
 - Agent Failure Taxonomy
 - Improved evaluation examples

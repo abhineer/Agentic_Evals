@@ -251,3 +251,53 @@ task-type *subsets* actually in use (sections 2–3), the standard trace format
 (section 5, which the design doc specified only as a requirement, not a shape),
 and the tool-use failure taxonomy (section 6, which the design doc left as a
 placeholder — "failure taxonomy" — under Phase 1's deliverables).
+
+## 9. Phase 3 Draft — Proposed Additions (Not Yet Implemented)
+
+`tasks_phase3_draft.json`'s 40 draft tasks (T11–T50) surfaced two schema gaps
+the pilot's 10 tasks were too uniform to hit. Neither is implemented yet —
+recorded here so the proposal lives with the schema, not just in a task
+file's comments.
+
+**New task types**, beyond the pilot subset in section 3:
+
+```text
+COMPOUND_QUERY        Two or more tools needed to answer one request, with
+                       no data dependency between them (e.g. an independent
+                       READ and a COMPUTE in the same turn).
+NO_TOOL_RESPONSE       Correct behavior is zero tool calls — the request is
+                       conversational, conceptual, or already answerable from
+                       information stated in the prompt itself.
+AMBIGUOUS_REQUEST      The request under-specifies the target entity and/or
+                       a required argument; correct behavior is to ask,
+                       not guess.
+PARALLEL_QUERY         Two or more tool calls that are fully independent of
+                       each other and of each other's output.
+```
+
+**`trajectory_order`** — a proposed new field on `expected_trajectory`,
+needed because `harness/scorer.py`'s `tool_sequence` check is a strict
+ordered-prefix match with no way to express anything looser:
+
+```text
+STRICT   Default (matches current pilot behavior). Calls must occur in
+         exactly the given order.
+ANY      Calls may occur in any order — used for COMPOUND_QUERY and
+         PARALLEL_QUERY tasks with no data dependency between steps.
+PARTIAL  A named subset of calls may occur in any order relative to each
+         other, but all of them must precede (or follow) another named
+         call — e.g. two disambiguating reads that can happen in either
+         order, both required before a destructive call.
+```
+
+**The postcondition checker needs to become data-driven.** `harness/scorer.py`
+currently hardcodes one Python function per task ID (`_check_T03` through
+`_check_T10` in `POSTCONDITION_CHECKS`) rather than evaluating each task's
+`expected_postconditions` generically. That was a reasonable shortcut at 10
+tasks sharing few postcondition shapes; at 50 it produces a silent failure
+mode — any task ID without a registered function defaults
+`postconditions_met` to `True` rather than being flagged as unscored. This
+needs a generic evaluator (e.g. a small predicate DSL or per-postcondition-
+name registry keyed on the postcondition strings already declared in
+`tools.py`'s `TOOL_SCHEMAS`, such as `ORDER_CANCELLED` or
+`ITEM_ADDED_TO_CART`) before Phase 3's 40 draft tasks can be scored at all.
