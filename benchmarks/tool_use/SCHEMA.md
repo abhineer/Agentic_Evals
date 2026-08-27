@@ -252,12 +252,12 @@ task-type *subsets* actually in use (sections 2–3), the standard trace format
 and the tool-use failure taxonomy (section 6, which the design doc left as a
 placeholder — "failure taxonomy" — under Phase 1's deliverables).
 
-## 9. Phase 3 Draft — Proposed Additions (Not Yet Implemented)
+## 9. Phase 3 Draft — Proposed Additions
 
 `tasks_phase3_draft.json`'s 40 draft tasks (T11–T50) surfaced two schema gaps
-the pilot's 10 tasks were too uniform to hit. Neither is implemented yet —
-recorded here so the proposal lives with the schema, not just in a task
-file's comments.
+the pilot's 10 tasks were too uniform to hit — recorded here so the
+proposal lives with the schema, not just in a task file's comments. One is
+implemented; `trajectory_order` is not.
 
 **New task types**, beyond the pilot subset in section 3:
 
@@ -275,9 +275,9 @@ PARALLEL_QUERY         Two or more tool calls that are fully independent of
                        each other and of each other's output.
 ```
 
-**`trajectory_order`** — a proposed new field on `expected_trajectory`,
-needed because `harness/scorer.py`'s `tool_sequence` check is a strict
-ordered-prefix match with no way to express anything looser:
+**`trajectory_order`** — a proposed new field on `expected_trajectory`, still
+not implemented, needed because `harness/scorer.py`'s `tool_sequence` check
+is a strict ordered-prefix match with no way to express anything looser:
 
 ```text
 STRICT   Default (matches current pilot behavior). Calls must occur in
@@ -290,14 +290,28 @@ PARTIAL  A named subset of calls may occur in any order relative to each
          order, both required before a destructive call.
 ```
 
-**The postcondition checker needs to become data-driven.** `harness/scorer.py`
-currently hardcodes one Python function per task ID (`_check_T03` through
-`_check_T10` in `POSTCONDITION_CHECKS`) rather than evaluating each task's
-`expected_postconditions` generically. That was a reasonable shortcut at 10
-tasks sharing few postcondition shapes; at 50 it produces a silent failure
-mode — any task ID without a registered function defaults
-`postconditions_met` to `True` rather than being flagged as unscored. This
-needs a generic evaluator (e.g. a small predicate DSL or per-postcondition-
-name registry keyed on the postcondition strings already declared in
-`tools.py`'s `TOOL_SCHEMAS`, such as `ORDER_CANCELLED` or
-`ITEM_ADDED_TO_CART`) before Phase 3's 40 draft tasks can be scored at all.
+**The postcondition checker is now data-driven. (Resolved.)**
+`harness/scorer.py` previously hardcoded one Python function per task ID
+(`_check_T03` through `_check_T10` in `POSTCONDITION_CHECKS`) rather than
+evaluating each task's `expected_postconditions` generically — a reasonable
+shortcut at 10 tasks sharing few postcondition shapes, but one that produced
+a silent failure mode at 50: any task ID without a registered function
+defaulted `postconditions_met` to `True` rather than being flagged as
+unscored. `harness/scorer.py`'s `POSTCONDITION_PREDICATES` replaces this
+with a name -> predicate registry keyed on the postcondition strings already
+declared in `tools.py`'s `TOOL_SCHEMAS` (`ORDER_CANCELLED`,
+`ITEM_ADDED_TO_CART`, etc.), and a task declaring no postconditions at all is
+now checked against a real invariant (`WORLD_STATE_UNCHANGED`) instead of
+being silently skipped.
+
+Validated by re-scoring the pilot's recorded traces through the new checker
+(identical results to the original hardcoded functions, plus two intentional
+improvements — see `harness/scorer.py`'s module docstring) and by simulating
+a "golden" agent that executes exactly the `expected_trajectory` for all 40
+draft tasks against the real store: every task scores `task_completion: True`
+(or `NEEDS_REVIEW` for judge-flagged tasks). That golden-trace pass also
+caught a genuine task-data bug — T14 and T22 called `create_support_ticket`
+with only `customer_id`, omitting the tool's other required arguments
+(`subject`/`description`/`priority`), which is fine for a real agent (it
+supplies its own values) but made the tasks non-executable as written;
+both now include illustrative values for those fields.
