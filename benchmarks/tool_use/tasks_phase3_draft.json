@@ -52,10 +52,10 @@
     "trajectory_order": "ANY",
     "expected_trajectory": [
       {"tool_name": "check_inventory", "arguments": {"sku": "SKU-3001"}},
-      {"tool_name": "create_support_ticket", "arguments": {"customer_id": "CUST-201"}}
+      {"tool_name": "create_support_ticket", "arguments": {"customer_id": "CUST-201", "subject": "Bulk pricing inquiry", "description": "Customer is asking about bulk pricing for SKU-3001 (USB-C Charging Cable).", "priority": "LOW"}}
     ],
     "expected_postconditions": ["TICKET_CREATED"],
-    "notes": "subject/description/priority on create_support_ticket are AGENT-sourced free text -- scorer should match tool_name + customer_id only, not exact-match the free-text fields."
+    "notes": "subject/description/priority on create_support_ticket are AGENT-sourced free text -- scorer matches tool_name + customer_id only, not the free-text fields exactly. Values shown are illustrative (needed so the call is actually executable -- these are required, no-default arguments on the real tool), not a required exact match."
   },
   {
     "task_id": "T15",
@@ -187,10 +187,10 @@
     "trajectory_order": "STRICT",
     "expected_trajectory": [
       {"tool_name": "cancel_order", "arguments": {"order_id": "ORD-2005", "reason": "OTHER"}},
-      {"tool_name": "create_support_ticket", "arguments": {"customer_id": "CUST-208"}}
+      {"tool_name": "create_support_ticket", "arguments": {"customer_id": "CUST-208", "subject": "Order cancelled due to pricing error", "description": "Order ORD-2005 was cancelled because it was priced incorrectly.", "priority": "MEDIUM"}}
     ],
     "expected_postconditions": ["ORDER_CANCELLED", "TICKET_CREATED"],
-    "notes": "A ticket created before the cancel call would describe a cancellation that hadn't happened yet at that point in the trace. cancel_order's reason enum here is OTHER (pricing error isn't CUSTOMER_REQUEST/DUPLICATE/OUT_OF_STOCK) -- doubles as a light argument-correctness check."
+    "notes": "A ticket created before the cancel call would describe a cancellation that hadn't happened yet at that point in the trace. cancel_order's reason enum here is OTHER (pricing error isn't CUSTOMER_REQUEST/DUPLICATE/OUT_OF_STOCK) -- doubles as a light argument-correctness check. subject/description/priority are illustrative (AGENT-sourced, not exact-matched by the scorer) but required, no-default arguments on the real tool."
   },
   {
     "task_id": "T23",

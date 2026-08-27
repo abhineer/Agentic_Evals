@@ -137,28 +137,34 @@ both.
 `tasks_phase3_draft.json` holds 40 new tasks (T11–T50), taking the total
 toward Phase 3's 25–50 target (10 pilot + 40 draft = 50, sized to the top of
 that range). These are content-complete against the real `tools.py`/
-`store.py` — real SKUs, real preconditions, real enum values — but **two
-harness gaps have to close before they can run through `run_pilot.py`**:
+`store.py` — real SKUs, real preconditions, real enum values — but **one
+harness gap still has to close before they can run through `run_pilot.py`**:
 
-1. **The postcondition checker isn't generic yet.** `harness/scorer.py`
-   currently hardcodes one Python function per task ID (`_check_T03`
-   through `_check_T10`) rather than reading `expected_postconditions` from
-   the task data. A task with no matching function silently defaults
-   `postconditions_met` to `True` (see `score_task`'s
-   `postcondition_results if ... else True`) — not flagged, just skipped.
-   That's an acceptable shortcut at 10 tasks but silently misleading at 50:
-   without a generic evaluator, every one of the 40 new tasks reports as
-   "passed" on postconditions regardless of what actually happened. This has
-   to become a data-driven registry, not more per-task functions.
-2. **The scorer only supports one trajectory shape.** `tool_sequence`
+1. ~~The postcondition checker isn't generic yet.~~ **Resolved.**
+   `harness/scorer.py`'s `POSTCONDITION_PREDICATES` now reads each task's
+   `expected_postconditions` generically instead of hardcoding one Python
+   function per task ID, and a task with no declared postconditions is
+   checked against a real invariant (`WORLD_STATE_UNCHANGED`) rather than
+   silently defaulting to "passed." Validated two ways: re-scoring the
+   pilot's recorded traces (`results/*_traces.json`) through the new checker
+   reproduces every original score exactly, plus two documented
+   improvements (T01/T02/T09 now get a real check instead of `N/A`; T05's
+   previously-unchecked `ITEM_ADDED_TO_CART` postcondition — silently
+   dropped by the old per-task function — now passes); and simulating a
+   "golden" agent that executes exactly the `expected_trajectory` for all
+   40 draft tasks against the real store scores `task_completion: True` (or
+   `NEEDS_REVIEW` for judge-flagged tasks) on all 40.
+2. **The scorer still only supports one trajectory shape.** `tool_sequence`
    (`harness/scorer.py`) is a strict ordered-prefix match with no concept of
    order-independence. 15 of the 40 draft tasks need something else: two
    `add_item_to_cart` calls that can happen in either order before a
    `place_order` (T19), two disambiguating reads that can happen in either
    order before a destructive call (T35, T36), or fully independent parallel
    calls (T13–T16, T44–T50). Each draft task carries a new `trajectory_order`
-   field (`STRICT` / `ANY` / `PARTIAL`) proposing this, but it isn't in
-   `SCHEMA.md` yet and the scorer doesn't read it.
+   field (`STRICT` / `ANY` / `PARTIAL`) proposing this — documented in
+   `SCHEMA.md` section 9 — but the scorer doesn't read it yet. This is the
+   one remaining blocker before `tasks_phase3_draft.json` can be merged into
+   the live `tasks.json` and actually run.
 
 **Category breakdown** (40 new + 10 reused/kept from the pilot = 50 total),
 weighted toward categories the pilot showed actually discriminate agent
