@@ -21,16 +21,28 @@ hardcoded one Python function per pilot task ID (`_check_T03` .. `_check_T10`)
 and silently treated any task ID without a registered function as passing —
 see SCHEMA.md section 9 for why that doesn't survive past pilot scale.
 
-`trajectory_order` (STRICT / ANY / PARTIAL) support is a separate, still-open
-piece of work — see SCHEMA.md section 9. This file's `tool_sequence` check
-remains a strict ordered-prefix match; tasks that declare ANY or PARTIAL
-trajectory_order are not yet scored correctly by dimension 4/5 below.
+`trajectory_order` (STRICT / ANY / PARTIAL, SCHEMA.md section 9) is honored
+by dimensions 1, 2, and 4 via `_align_trajectory`. A task's expected steps
+are partitioned into ordered "blocks" — steps sharing the same
+`sequence_group` may occur in any order relative to each other, but blocks
+must occur in group order relative to one another. STRICT (the default when
+neither `trajectory_order` nor a step's `sequence_group` is set) puts every
+step in its own singleton block, reducing to the original strict
+positional match. ANY puts every step in one shared block. PARTIAL requires
+each step to declare its own `sequence_group` explicitly. Each block is
+matched against the corresponding window of the agent's first
+`len(expected_trajectory)` tool calls by trying every within-block
+permutation (blocks are small — at most 3 steps across every task drafted
+so far) and keeping the one with the most tool-name matches (ties broken by
+argument matches), so ANY/PARTIAL tasks don't get penalized for an agent
+choosing a different, equally correct order.
 """
 
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Dict, List, Tuple
+from itertools import permutations
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from tools import TOOL_SCHEMAS
 
@@ -233,6 +245,93 @@ def check_postconditions(task: Dict[str, Any], trace: Dict[str, Any]) -> List[Tu
     return results
 
 
+# ---------------------------------------------------------------------------
+# trajectory_order (STRICT / ANY / PARTIAL) — block-aware alignment
+# ---------------------------------------------------------------------------
+
+def _step_blocks(task: Dict[str, Any]) -> List[List[int]]:
+    """Partition expected_trajectory indices into ordered blocks. Steps in the
+    same block may occur in any order relative to each other; blocks must
+    occur in the order returned here relative to one another."""
+    expected = task["expected_trajectory"]
+    order_mode = task.get("trajectory_order", "STRICT")
+
+    groups = []
+    for i, step in enumerate(expected):
+        if "sequence_group" in step:
+            groups.append(step["sequence_group"])
+        elif order_mode == "ANY":
+            groups.append(0)
+        else:  # STRICT, or PARTIAL without an explicit sequence_group
+            groups.append(i)
+
+    unique_groups = list(dict.fromkeys(groups))
+    return [[i for i, g in enumerate(groups) if g == group] for group in unique_groups]
+
+
+def _best_block_match(
+    expected_block: List[Dict[str, Any]], actual_block: List[Dict[str, Any]]
+) -> Tuple[List[Optional[Dict[str, Any]]], bool]:
+    """Try every within-block permutation of actual_block against
+    expected_block (blocks are small, so brute force is fine) and return the
+    permutation with the most tool-name matches, ties broken by argument
+    matches — plus whether every expected step in this block found a
+    name-matching actual call (used for the sequence dimension)."""
+    n = len(expected_block)
+    if len(actual_block) != n:
+        # Length mismatch (agent skipped or added calls within this block) —
+        # pair positionally as a fallback so dimensions 1/2 still get partial
+        # credit; this block can't be sequence-correct either way.
+        padded = list(actual_block) + [None] * max(0, n - len(actual_block))
+        return padded[:n], False
+
+    best_perm: Tuple[Optional[Dict[str, Any]], ...] = tuple(actual_block)
+    best_score = (-1, -1)
+    for perm in permutations(actual_block):
+        name_hits = sum(1 for e, a in zip(expected_block, perm) if a["tool_name"] == e["tool_name"])
+        arg_hits = sum(
+            1
+            for e, a in zip(expected_block, perm)
+            if a["tool_name"] == e["tool_name"]
+            and all(k in a["arguments"] and _values_match(v, a["arguments"][k]) for k, v in e["arguments"].items())
+        )
+        score = (name_hits, arg_hits)
+        if score > best_score:
+            best_score = score
+            best_perm = perm
+
+    names_ok = best_score[0] == n
+    return list(best_perm), names_ok
+
+
+def _align_trajectory(
+    task: Dict[str, Any], calls: List[Dict[str, Any]]
+) -> Tuple[List[Optional[Dict[str, Any]]], bool]:
+    """Align each expected step with the actual call block-matching assigned
+    it. Returns (alignment, sequence_ok) where alignment[i] is the actual
+    call paired with expected_trajectory[i] (or None if unmatched), and
+    sequence_ok is whether every block's tool names matched (regardless of
+    argument correctness — mirrors the original tool_sequence contract,
+    which was names-only)."""
+    expected = task["expected_trajectory"]
+    blocks = _step_blocks(task)
+    actual_prefix = calls[: len(expected)]
+
+    alignment: List[Optional[Dict[str, Any]]] = [None] * len(expected)
+    sequence_ok = True
+    pos = 0
+    for idxs in blocks:
+        expected_block = [expected[i] for i in idxs]
+        window = actual_prefix[pos : pos + len(idxs)]
+        matched, names_ok = _best_block_match(expected_block, window)
+        for i, actual_call in zip(idxs, matched):
+            alignment[i] = actual_call
+        sequence_ok = sequence_ok and names_ok
+        pos += len(idxs)
+
+    return alignment, sequence_ok
+
+
 def score_task(task: Dict[str, Any], trace: Dict[str, Any]) -> Dict[str, Any]:
     expected = task["expected_trajectory"]
     expected_names = [e["tool_name"] for e in expected]
@@ -241,19 +340,22 @@ def score_task(task: Dict[str, Any], trace: Dict[str, Any]) -> Dict[str, Any]:
     calls = _tool_calls(trace)
     actual_names = [c["tool_name"] for c in calls]
 
-    # 1. Tool selection — position-wise match against expected trajectory
-    selection_hits = sum(
-        1 for i, name in enumerate(expected_names) if i < len(actual_names) and actual_names[i] == name
-    )
+    # 1. Tool selection — match against expected trajectory, honoring
+    #    trajectory_order (STRICT positional / ANY / PARTIAL block matching)
+    alignment, sequence_ok = _align_trajectory(task, calls)
+
+    selection_hits = sum(1 for e, a in zip(expected, alignment) if a and a["tool_name"] == e["tool_name"])
     tool_selection = selection_hits / len(expected_names) if expected_names else 1.0
 
-    # 2. Tool arguments — for positions where the tool matched, compare args
+    # 2. Tool arguments — for expected steps whose aligned call matched on
+    #    tool name, compare args (alignment already accounts for
+    #    trajectory_order, so this isn't assuming positional correspondence)
     arg_hits = 0
     arg_checked = 0
-    for i, exp in enumerate(expected):
-        if i < len(calls) and calls[i]["tool_name"] == exp["tool_name"]:
+    for exp, actual_call in zip(expected, alignment):
+        if actual_call and actual_call["tool_name"] == exp["tool_name"]:
             arg_checked += 1
-            actual_args = calls[i]["arguments"]
+            actual_args = actual_call["arguments"]
             if all(k in actual_args and _values_match(v, actual_args[k]) for k, v in exp["arguments"].items()):
                 arg_hits += 1
     tool_arguments = (arg_hits / arg_checked) if arg_checked else (1.0 if not expected else 0.0)
@@ -261,10 +363,10 @@ def score_task(task: Dict[str, Any], trace: Dict[str, Any]) -> Dict[str, Any]:
     # 3. Tool execution — fraction of calls that returned SUCCESS
     tool_execution = (sum(1 for c in calls if c["result"]["status"] == "SUCCESS") / len(calls)) if calls else None
 
-    # 4. Tool sequence — exact ordered match of the expected-length prefix
-    #    NOTE: does not yet honor trajectory_order == ANY/PARTIAL (SCHEMA.md
-    #    section 9) — those tasks are scored as if STRICT applied.
-    tool_sequence = actual_names[: len(expected_names)] == expected_names
+    # 4. Tool sequence — every trajectory_order block's tool names matched
+    #    the expected block's names (in some within-block order for ANY/
+    #    PARTIAL blocks, positionally for STRICT's singleton blocks).
+    tool_sequence = sequence_ok
 
     # 5. Completeness — every expected tool name appears somewhere in the trace
     completeness = set(expected_names).issubset(set(actual_names))
