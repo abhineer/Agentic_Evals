@@ -132,14 +132,14 @@
       "inventory": {"SKU-5003": 5, "SKU-3001": 30},
       "carts": {"CART-201": {"customer_id": "CUST-205", "items": []}}
     },
-    "trajectory_order": "STRICT",
+    "trajectory_order": "PARTIAL",
     "expected_trajectory": [
-      {"tool_name": "add_item_to_cart", "arguments": {"cart_id": "CART-201", "sku": "SKU-5003", "quantity": 1}},
-      {"tool_name": "add_item_to_cart", "arguments": {"cart_id": "CART-201", "sku": "SKU-3001", "quantity": 2}},
-      {"tool_name": "place_order", "arguments": {"customer_id": "CUST-205", "cart_id": "CART-201", "payment_method": "PAYPAL"}}
+      {"tool_name": "add_item_to_cart", "arguments": {"cart_id": "CART-201", "sku": "SKU-5003", "quantity": 1}, "sequence_group": 0},
+      {"tool_name": "add_item_to_cart", "arguments": {"cart_id": "CART-201", "sku": "SKU-3001", "quantity": 2}, "sequence_group": 0},
+      {"tool_name": "place_order", "arguments": {"customer_id": "CUST-205", "cart_id": "CART-201", "payment_method": "PAYPAL"}, "sequence_group": 1}
     ],
     "expected_postconditions": ["ITEM_ADDED_TO_CART", "ORDER_CREATED", "CART_CLEARED", "INVENTORY_DECREMENTED"],
-    "notes": "The two add_item_to_cart calls are logically interchangeable with each other but must both precede place_order -- a partial-ordering case (\"free order within a block, strict across blocks\") the current fully-strict/fully-free scorer can't express. Flagged as a harness gap, not just a task-content one."
+    "notes": "The two add_item_to_cart calls (sequence_group 0) are logically interchangeable with each other but must both precede place_order (sequence_group 1) -- a partial-ordering case (\"free order within a block, strict across blocks\")."
   },
   {
     "task_id": "T20",
@@ -409,9 +409,9 @@
     },
     "trajectory_order": "PARTIAL",
     "expected_trajectory": [
-      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2011"}},
-      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2012"}},
-      {"tool_name": "cancel_order", "arguments": {"order_id": "ORD-2011", "reason": "CUSTOMER_REQUEST"}}
+      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2011"}, "sequence_group": 0},
+      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2012"}, "sequence_group": 0},
+      {"tool_name": "cancel_order", "arguments": {"order_id": "ORD-2011", "reason": "CUSTOMER_REQUEST"}, "sequence_group": 1}
     ],
     "expected_postconditions": ["ORDER_CANCELLED"],
     "requires_llm_judge": true,
@@ -431,9 +431,9 @@
     },
     "trajectory_order": "PARTIAL",
     "expected_trajectory": [
-      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2013"}},
-      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2014"}},
-      {"tool_name": "issue_refund", "arguments": {"order_id": "ORD-2013", "amount": 39.99, "reason": "WRONG_ITEM"}}
+      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2013"}, "sequence_group": 0},
+      {"tool_name": "get_order_status", "arguments": {"order_id": "ORD-2014"}, "sequence_group": 0},
+      {"tool_name": "issue_refund", "arguments": {"order_id": "ORD-2013", "amount": 39.99, "reason": "WRONG_ITEM"}, "sequence_group": 1}
     ],
     "expected_postconditions": ["REFUND_ISSUED"],
     "requires_llm_judge": true,

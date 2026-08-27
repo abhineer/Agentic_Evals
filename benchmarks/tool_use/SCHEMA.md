@@ -256,8 +256,8 @@ placeholder — "failure taxonomy" — under Phase 1's deliverables).
 
 `tasks_phase3_draft.json`'s 40 draft tasks (T11–T50) surfaced two schema gaps
 the pilot's 10 tasks were too uniform to hit — recorded here so the
-proposal lives with the schema, not just in a task file's comments. One is
-implemented; `trajectory_order` is not.
+proposal lives with the schema, not just in a task file's comments. Both are
+now implemented.
 
 **New task types**, beyond the pilot subset in section 3:
 
@@ -275,20 +275,43 @@ PARALLEL_QUERY         Two or more tool calls that are fully independent of
                        each other and of each other's output.
 ```
 
-**`trajectory_order`** — a proposed new field on `expected_trajectory`, still
-not implemented, needed because `harness/scorer.py`'s `tool_sequence` check
-is a strict ordered-prefix match with no way to express anything looser:
+**`trajectory_order` on `expected_trajectory`. (Resolved.)** Needed because
+`harness/scorer.py`'s `tool_sequence` check was a strict ordered-prefix match
+with no way to express anything looser:
 
 ```text
-STRICT   Default (matches current pilot behavior). Calls must occur in
-         exactly the given order.
+STRICT   Default. Calls must occur in exactly the given order.
 ANY      Calls may occur in any order — used for COMPOUND_QUERY and
          PARALLEL_QUERY tasks with no data dependency between steps.
-PARTIAL  A named subset of calls may occur in any order relative to each
-         other, but all of them must precede (or follow) another named
-         call — e.g. two disambiguating reads that can happen in either
-         order, both required before a destructive call.
+PARTIAL  Steps sharing a `sequence_group` may occur in any order relative
+         to each other, but groups must occur in group order relative to
+         one another — e.g. two disambiguating reads (group 0) that can
+         happen in either order, both required before a destructive call
+         (group 1).
 ```
+
+`harness/scorer.py`'s `_align_trajectory` partitions `expected_trajectory`
+into ordered blocks from `sequence_group` (defaulting to one block per step
+for STRICT, or one shared block for ANY when no `sequence_group` is given),
+matches each block against the corresponding window of the agent's tool
+calls by trying every within-block permutation (blocks are small — at most
+3 steps across every task drafted so far) and keeping the permutation with
+the most tool-name matches, and derives dimensions 1 (tool selection), 2
+(tool arguments), and 4 (tool sequence) from that alignment instead of raw
+position. `PARTIAL` tasks must set `sequence_group` on every step explicitly
+— without it they silently fall back to STRICT (each step its own block),
+which fails closed rather than pretending to be more lenient than actually
+authored.
+
+Validated by: re-scoring the pilot's recorded traces (all STRICT) through
+the new alignment logic — identical results to the original positional
+implementation; and, for every `ANY`/`PARTIAL` draft task, executing the
+expected calls in a *different*, still-valid order (e.g. the two
+independent reads in T48 reversed, the two free-order steps in T35/T36
+swapped while the final destructive call stays last) and confirming the
+task still scores perfectly — plus confirming an order that violates a
+`PARTIAL` task's block constraint (moving the destructive call before its
+required disambiguating reads) is still caught as a sequence failure.
 
 **The postcondition checker is now data-driven. (Resolved.)**
 `harness/scorer.py` previously hardcoded one Python function per task ID
